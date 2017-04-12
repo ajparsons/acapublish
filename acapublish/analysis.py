@@ -49,7 +49,8 @@ class CleverNumberTransformer(BaseTransformer):
     """
 
     def get_function(self, col_name, generator):
-        if "%" in col_name:
+        lcol = col_name.lower()
+        if "%" in lcol:
             return if_floatable(lambda x: "{:0.2f}%".format(float(x)))
 
         else:
@@ -57,7 +58,10 @@ class CleverNumberTransformer(BaseTransformer):
             m = max(all)
 
             if m > 1000:
-                return if_floatable(lambda x: "{:,}".format(int(x)))
+                if "year" in lcol:
+                    return if_floatable(lambda x: "{0}".format(int(x)))
+                else:
+                    return if_floatable(lambda x: "{:,}".format(int(x)))
             else:
                 return if_floatable(lambda x: "{:0.4f}".format(float(x)))
 
