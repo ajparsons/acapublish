@@ -152,6 +152,8 @@ class AnalysisGroup(object):
 
         return inner
 
+    
+
     def register(self, label, description):
         """
         register function with a label
@@ -160,6 +162,7 @@ class AnalysisGroup(object):
 
         def inner(func):
             self.func_lookup[label] = func
+            func.analysis_label = label
             return func
 
         return inner
@@ -182,14 +185,20 @@ class AnalysisGroup(object):
         """
         run functions depend on label
         """
+        
+        def save_if_result(func):
+            result = func()
+            if result:
+                self.save(func.analysis_label,result)
+                        
         if label == None:
             already_run = []
             for r in self.func_lookup.itervalues():
                 if r not in already_run:
-                    r()
+                    save_if_result(r)
                     already_run.append(r)
         else:
-            self.func_lookup[label]()
+            save_if_result(self.func_lookup[label])
 
     def autocomplete(self):
         """
