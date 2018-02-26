@@ -9,12 +9,15 @@ from copy import deepcopy
 
 analysis_folder = r"_analysis"
 
+
 def if_floatable(func):
     """
     decorator that ensures all input to function are floats
     """
     def inner(x):
 
+        if x == None:
+            return ""
         if type(x) == float:
             return func(x)
         try:
@@ -42,10 +45,10 @@ class BaseTransformer(object):
 class CleverNumberTransformer(BaseTransformer):
     """
     depending on properties of whole column, transform into nicer looking numbers
-    
+
     if % - make percentage
     if larger than 1000, comma seperate
-    
+
     """
 
     def get_function(self, col_name, generator):
@@ -56,8 +59,9 @@ class CleverNumberTransformer(BaseTransformer):
         else:
             all = [x for x in generator]
             m = max(all)
+            mi = min(all)
 
-            if m > 1000:
+            if m > 1000 and mi > 1:
                 if "year" in lcol:
                     return if_floatable(lambda x: "{0}".format(int(x)))
                 else:
@@ -66,7 +70,7 @@ class CleverNumberTransformer(BaseTransformer):
                 return if_floatable(lambda x: "{:0.4f}".format(float(x)))
 
 
-def markdown_table(qg, label, caption):
+def markdown_table(qg, label, caption,path,force_sig=False):
     """
     generate a markdown table (correctly formatted) of the data
     """
@@ -123,14 +127,15 @@ def markdown_table(qg, label, caption):
     table = tabulate(
         qg.data, qg.header, tablefmt="pipe", disable_numparse=True)
     nlabel = "table-{0}".format(label.lower())
+    if force_sig and SignifianceManager.level == 0:
+        SignifianceManager.level = 3
     if SignifianceManager.level:
         ncaption = caption + "-sigtable{0}".format(SignifianceManager.level)
     else:
         ncaption = caption
     desc = "\n[{0}][{1}]".format(ncaption, nlabel)
 
-    QuickText(text=table + desc).save(os.path.join(analysis_folder,
-                                                   "{0}.txt".format(label)))
+    QuickText(text=table + desc).save(path)
 
 
 class AnalysisGroup(object):
@@ -138,6 +143,10 @@ class AnalysisGroup(object):
     def __init__(self):
         self.key_lookup = {}
         self.func_lookup = {}
+        self.root = ""
+
+    def set_root(self, new):
+        self.root = new
 
     def register_group(self, list_of_analysis):
         """
@@ -156,8 +165,6 @@ class AnalysisGroup(object):
 
         return inner
 
-    
-
     def register(self, label, description):
         """
         register function with a label
@@ -171,7 +178,7 @@ class AnalysisGroup(object):
 
         return inner
 
-    def save(self, label, qg):
+    def save(self, label, qg, force_sig=False):
         """
         save csv and markdown
         """
@@ -181,20 +188,24 @@ class AnalysisGroup(object):
             [c for c in safe_caption if c.isalpha() or c.isdigit() or c == '_']).rstrip()
         if os.path.exists(analysis_folder) == False:
             os.makedirs(analysis_folder)
+
         qg.save(
-            [analysis_folder, "{0}_{1}.csv".format(label, safe_caption).lower()])
-        markdown_table(qg, label, caption)
+            [self.root,analysis_folder, "{0}_{1}.csv".format(label, safe_caption).lower()])
+        markdown_table(qg, label, caption, os.path.join(self.root,
+                                                        analysis_folder,
+                                                        "{0}.txt".format(label))
+                       ,force_sig = force_sig)
 
     def dispatch(self, label=None):
         """
         run functions depend on label
         """
-        
+
         def save_if_result(func):
             result = func()
             if result:
-                self.save(func.analysis_label,result)
-                        
+                self.save(func.analysis_label, result)
+
         if label == None:
             already_run = []
             for r in self.func_lookup.itervalues():
