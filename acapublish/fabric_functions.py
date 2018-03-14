@@ -76,9 +76,12 @@ def compile(create_pdf=True,create_word=False):
     create pdf from scrivener
     """
     from export import (process_md, create_latex_variables, modify_latex,
-                        adjust_mmd_for_word,convert_mmd_to_word,adjust_md_for_latex)
+                        adjust_mmd_for_word,convert_mmd_to_word,adjust_md_for_latex,scriv_to_md)
     
     settings = ProjectSettings.settings
+    
+    if hasattr(settings,"SCRIVENER_FOLDER") and settings.SCRIVENER_FOLDER:
+        scriv_to_md(settings.SCRIVENER_FOLDER,settings.SCRIVENER_ROOT,settings.MARKDOWN_FOLDER)
     
     process_md(settings.MARKDOWN_FOLDER,
               root=settings.SCRIVENER_ROOT,

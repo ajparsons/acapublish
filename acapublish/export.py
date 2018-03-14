@@ -134,7 +134,8 @@ def adjust_mmd_for_word(source_file,export_file,settings):
     table_lookup = {}
     table_count = 0
     for x,l in enumerate(qt.lines()):
-        l = l
+        if l and l[0] == "!": #fix relative image reference for word docs
+            l.update(l.replace("] (","](_compile/"))
         if l and l[0] == "|" and start_table == None:
             table_count += 1
             start_table = x
@@ -150,7 +151,7 @@ def adjust_mmd_for_word(source_file,export_file,settings):
                 sig = int(name[-1])
                 name = name.replace("-sigtable{0}".format(sig),"")
                 sig_level = construct_sig(sig,markdown=True)
-                l.update(sig_level + "<ENDTABLE>")
+                l.update("\r\n" + sig_level + "<ENDTABLE>")
             else:
                 l.update("<ENDTABLE>")
             
@@ -184,7 +185,8 @@ def adjust_mmd_for_word(source_file,export_file,settings):
             count += 1
         table_text = '\n\r<div style="page-break-after: always;"></div>'.join(tables)
         QuickText(text=table_text).save(r"_compile\tables.mmd")
-        
+    else:
+        text = text.replace("<STARTTABLE>","").replace("<ENDTABLE>","")
             
     
     QuickText(text=text).save(export_file)
@@ -236,7 +238,7 @@ def process_md(folder,root,export_file,settings):
     
     for x,l in enumerate(qt.lines()):
         l = l
-        if l and l[0] == "|" and start_table == None:
+        if l and l[0] == "|" and start_table == None: #start table
             table_count += 1
             start_table = x
         if start_table and "[table-" in l:
@@ -245,7 +247,6 @@ def process_md(folder,root,export_file,settings):
             t = t.replace("[","")
             t = t.replace("]","")
             name, table_id = t.split("|")
-        
             table_lookup[table_id.strip()] = table_count
             start_table = None
 
@@ -337,7 +338,6 @@ def process_md(folder,root,export_file,settings):
         new_ref = cite.cite(cite_object)
         name, year = cite.name(cite_object)
         new_ref = u"".join(new_ref)
-        
         if settings.SHORT_CITE:
             
             if no_name:
@@ -359,11 +359,10 @@ def process_md(folder,root,export_file,settings):
             
             ref_format = "[^note{0}]".format(x)
             
-            if year_only and no_name == False:
-                ref_format =  name + ref_format
-            
             new_ref = u"{0}:{1}".format(ref_format,new_ref)
             references.append(new_ref)
+            if year_only and no_name == False:
+                ref_format =  name + ref_format
             text = text.replace(full,ref_format)
             
     if settings.SHORT_CITE:
