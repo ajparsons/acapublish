@@ -349,7 +349,8 @@ def process_md(folder,root,export_file,settings):
                 new_ref = short_year_format.format(name,year)
             
             if page_reference:
-                new_ref = new_ref[:-1] + ", " + page_reference + ")" 
+                
+                new_ref = new_ref[:-1] + ", " + page_reference + new_ref[-1]
             text = text.replace(full,new_ref)
         
         else:
