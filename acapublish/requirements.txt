@@ -1,0 +1,9 @@
+useful_inkleby
+tabulate
+bibtexparser
+scrivener_python
+citeproc
+gender_detector
+fabric
+oauth2client
+apiclient

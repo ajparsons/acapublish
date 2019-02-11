@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from citeproc.py2compat import *
 
+
 def preformat(text):
     return text
 
@@ -17,7 +18,7 @@ class TagWrapper(str):
 
     @classmethod
     def _wrap(cls, text):
-        return '{tag}{text}{tag}'.format(tag=cls.tag,text=text)
+        return '{tag}{text}{tag}'.format(tag=cls.tag, text=text)
 
     def __new__(cls, text):
         return super(TagWrapper, cls).__new__(cls, cls._wrap(text))

@@ -70,7 +70,7 @@ class CleverNumberTransformer(BaseTransformer):
                 return if_floatable(lambda x: "{:0.4f}".format(float(x)))
 
 
-def markdown_table(qg, label, caption,path,force_sig=False):
+def markdown_table(qg, label, caption, path, force_sig=False):
     """
     generate a markdown table (correctly formatted) of the data
     """
@@ -190,11 +190,10 @@ class AnalysisGroup(object):
             os.makedirs(analysis_folder)
 
         qg.save(
-            [self.root,analysis_folder, "{0}_{1}.csv".format(label, safe_caption).lower()])
+            [self.root, analysis_folder, "{0}_{1}.csv".format(label, safe_caption).lower()])
         markdown_table(qg, label, caption, os.path.join(self.root,
                                                         analysis_folder,
-                                                        "{0}.txt".format(label))
-                       ,force_sig = force_sig)
+                                                        "{0}.txt".format(label)), force_sig=force_sig)
 
     def dispatch(self, label=None):
         """
@@ -206,7 +205,7 @@ class AnalysisGroup(object):
             if result:
                 self.save(func.analysis_label, result)
 
-        if label == None:
+        if label is None:
             already_run = []
             for r in self.func_lookup.itervalues():
                 if r not in already_run:
